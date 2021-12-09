@@ -1,0 +1,33 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+    - name: add odoo apt-key
+      apt_key:
+        url: https://nightly.odoo.com/odoo.key
+        state: present
+
+    - name: Add odoo repo
+      apt_repository:
+        repo: 'deb http://nightly.odoo.com/15.0/nightly/deb/ ./'
+        state: present
+
+    - name: Install wkhtmltopdf
+      apt:
+        deb: https://github.com/wkhtmltopdf/wkhtmltopdf/releases/download/0.12.5/wkhtmltox_0.12.5-1.focal_amd64.deb
+        state: present
+
+    - name: Update debian linux and install odoo
+      apt:
+        name: odoo
+        update_cache: yes
+        # upgrade: yes
+
+    - name: Enable odoo service
+      service:
+        name: odoo
+        enabled: yes
+        state: started
+
+      
