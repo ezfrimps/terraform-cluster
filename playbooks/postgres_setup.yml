@@ -67,7 +67,6 @@
         create: yes
       notify: restart postgres
 
-    
   handlers:
     - name: restart postgres
       service:

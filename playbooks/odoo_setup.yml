@@ -2,6 +2,9 @@
 - hosts: all
   become: yes
 
+  vars_files:
+    - vars.yml
+
   tasks:
     - name: add odoo apt-key
       apt_key:
@@ -29,5 +32,26 @@
         name: odoo
         enabled: yes
         state: started
+
+    - name: Configure odoo
+      template:
+        src: templates/odoo_config.conf.j2
+        dest: /etc/odoo/odoo.conf
+      notify: restart odoo
+
+    - name: Open odoo port
+      ufw:
+        state: enabled
+        port: 8069,ssh
+        policy: allow
+        proto: tcp
+
+    - debug: var=hostvars[inventory_hostname]['ansible_eth1']['ipv4']['address']
+
+  handlers:
+    - name: restart odoo
+      service:
+        name: odoo
+        state: restarted
 
       

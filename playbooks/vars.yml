@@ -1,0 +1,5 @@
+odoo_default_db: "odoo"
+odoo_user_db: "odoo"
+odoo_password_db: "password"
+odoo_admin_password: "ghanaboytins"
+db_allowed_networks: "192.168.56.0/24"
