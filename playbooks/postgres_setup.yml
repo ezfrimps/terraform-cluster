@@ -6,62 +6,64 @@
     - vars.yml
 
   tasks:
-    - name: Update and upgrade packages
+    - name: Add postgresql repo apt-key
+      apt_key:
+        url: https://www.postgresql.org/media/keys/ACCC4CF8.asc
+        state: present
+
+    - name: Add postgresql apt-repository
+      apt_repository:
+        repo: deb http://apt.postgresql.org/pub/repos/apt/ buster-pgdg main
+        state: present
+
+    - name: Install prerequisite packages
       apt:
         name:
+          - gnupg
+          - gnupg2
           - bash
           - acl
-          - openssl
-          - libssl-dev
-          - libssl-doc
-        state: latest
+        state: present
         update_cache: true
 
-    - name: Install PostgreSQL
+    - name: Install postgres packages
       apt:
-        name:
-          - postgresql
-          - postgresql-contrib
-          - libpq-dev
+        name: 
+          - "postgresql-{{postgres_version}}"
           - python3-psycopg2
         state: latest
 
-    - name: Create odoo_base database
-      become: yes
-      become_user: postgres
+    - name: Create an odoo database
       postgresql_db:
-        name: '{{ odoo_default_db }}'
+        name: "{{ odoo_default_db }}"
         template: template0
         encoding: UTF8
         state: present
-
-    - name: Create odoo user and grant all privileges
-      become: yes
       become_user: postgres
+
+    - name: Create an odoo user
       postgresql_user:
-        name: '{{ odoo_user_db }}'
-        password: '{{ odoo_password_db }}'
-        db: '{{ odoo_default_db }}'
+        name: "{{ odoo_user_db }}"
+        password: "{{ odoo_password_db }}"
+        db: "{{ odoo_default_db }}"
+        priv: ALL
         state: present
-        role_attr_flags: CREATEDB,NOSUPERUSER
-      notify:
-        - restart postgres
-
-    - name: "Allow md5 connection for the db user"
-      postgresql_pg_hba:
-        dest: "/etc/postgresql/12/main/pg_hba.conf"
-        contype: host
-        databases: all
-        address: '{{ db_allowed_networks }}'
-        method: md5
-        users: "{{ odoo_user_db }}"
-        create: true
-      become: yes
       become_user: postgres
-      
+
+    - name: Grant user odoo from all network to database
+      become_user: postgres
+      postgresql_pg_hba:
+        dest: "/etc/postgresql/{{postgres_version}}/main/pg_hba.conf"
+        contype: host
+        users: all
+        source: "{{ db_allowed_networks }}"
+        databases: all
+        method: trust
+      notify: restart postgres
+
     - name: Edit postgresql.conf
       lineinfile:
-        path: "/etc/postgresql/12/main/postgresql.conf"
+        path: "/etc/postgresql/{{postgres_version}}/main/postgresql.conf"
         regexp: "^#?listen_addresses"
         line: "listen_addresses = '*'"
         create: yes

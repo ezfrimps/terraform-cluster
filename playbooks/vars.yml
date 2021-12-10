@@ -1,5 +1,7 @@
+postgres_version: '13'
+db_allowed_networks: "0.0.0.0/0"
 odoo_default_db: "odoo"
 odoo_user_db: "odoo"
 odoo_password_db: "password"
 odoo_admin_password: "ghanaboytins"
-db_allowed_networks: "192.168.56.0/24"
+ansible_python_interpreter: "/usr/bin/python3"
